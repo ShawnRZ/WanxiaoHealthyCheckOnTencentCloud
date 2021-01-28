@@ -58,6 +58,21 @@
 
     - 将IMEI信息记录备用
 
+4. 点击右上角绿色按钮“Code”，选择“Download ZIP”[下载][7]压缩包
+
+5. 解压压缩包会得到一个文件夹，用记事本打开文件夹中的users.json文本，按提示输入。
+
+6. 打开[腾讯云][8]，在右上角点击登录，登陆后进入控制台，在搜索栏中搜索“云函数”
+![控制台搜索栏](http://blog.rzx.ink/usr/uploads/2021/01/829186253.png "控制台搜索栏")
+
+7. 进入云函数后，选择左侧边栏的函数服务，再点击“新建”，设置如图，点击上传将刚刚下载
+![](http://blog.rzx.ink/usr/uploads/2021/01/463388679.png "云函数设置")
+
+8. 配置触发器，图中设置为每天1点触发，可通过修改Cron表达式更改时间，具体见[文档][9]
+![](http://blog.rzx.ink/usr/uploads/2021/01/4289111205.png)
+
+9. 最后点击完成，部署成功！
+
 
 
 ## 个人博客地址：[RZX's blog][1]
@@ -68,3 +83,6 @@
 [4]:http://www.vmos.cn/
 [5]:http://apk.17wanxiao.com/campus/apk/wanxiao.apk
 [6]:https://www.17wanxiao.com/new/index.html
+[7]:https://github.com/FNDHSTD/WanxiaoHealthyCheckOnTencentCloud/archive/master.zip
+[8]:https://cloud.tencent.com/
+[9]:https://cloud.tencent.com/document/product/583/9708
