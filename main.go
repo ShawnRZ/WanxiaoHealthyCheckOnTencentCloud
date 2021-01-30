@@ -14,34 +14,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/smtp"
 	"strings"
 	"time"
 
+	"github.com/FNDHSTD/logor"
 	"github.com/tencentyun/scf-go-lib/cloudfunction"
 )
 
-// Setting 配置文件
-type Setting struct {
+// Config 配置文件
+type Config struct {
 	Users []User `json:"users"`
 }
 
-func loadSetting() Setting {
-	var setting Setting
-	fData, err := ioutil.ReadFile("users.json")
+// 加载配置文件
+func loadConfig() (Config, error) {
+	var config Config
+	fData, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return config, fmt.Errorf("配置文件无法打开, %v", err)
 	}
-	err = json.Unmarshal(fData, &setting)
+	err = json.Unmarshal(fData, &config)
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return config, fmt.Errorf("配置文件解析失败, %v", err)
 	}
-	return setting
+	return config, nil
 }
 
 // User 用户结构体，存储所有的初始信息
@@ -58,28 +57,27 @@ type User struct {
 	CheckData     string
 }
 
-func (u *User) createRSAKey() {
+// 生成 RSA 密钥
+func (u *User) createRSAKey() error {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return fmt.Errorf("生成RSA密钥失败, %v", err)
 	}
 	u.PrivateKey = privateKey
+	return nil
 }
 
 // 与服务器交换密钥
-func (u *User) exchangeKey() {
+func (u *User) exchangeKey() error {
 	x509PublicKey, err := x509.MarshalPKIXPublicKey(&u.PrivateKey.PublicKey)
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return err
 	}
 	stringPublicKey := base64.RawStdEncoding.EncodeToString(x509PublicKey)
 	req, err := http.NewRequest("POST", "https://server.17wanxiao.com/campus/cam_iface46/exchangeSecretkey.action", bytes.NewBuffer([]byte(fmt.Sprintf(`{"key":"%v"}`, stringPublicKey))))
 
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return err
 	}
 	req.Header.Set("Accept", "application/json, text/javascript, */*; q=0.01")
 	req.Header.Set("Content-Type", "application/json")
@@ -87,50 +85,51 @@ func (u *User) exchangeKey() {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return err
 	}
 	defer res.Body.Close()
 
 	// 读取服务器传回的数据
 	resbody, err := ioutil.ReadAll(res.Body)
-	// fmt.Println("resbody:", string(resbody))
 
 	// base64解码
 	jsonBase64, err := base64.StdEncoding.DecodeString(string(resbody))
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return err
 	}
 
 	// rsa解码
-	jsonRsa := u.rsaDecrypt(string(jsonBase64))
+	jsonRsa, err := u.rsaDecrypt(string(jsonBase64))
+	if err != nil {
+		return err
+	}
 	// fmt.Println("jsonRsa", jsonRsa)
 	jsonMap := make(map[string]string)
 	err = json.Unmarshal([]byte(jsonRsa), &jsonMap)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	u.Key = jsonMap["key"][:24]
 	u.Session = jsonMap["session"]
+	return nil
 }
 
 // rsa解密
-func (u *User) rsaDecrypt(input string) string {
+func (u *User) rsaDecrypt(input string) (string, error) {
 	output, err := rsa.DecryptPKCS1v15(rand.Reader, u.PrivateKey, []byte(input))
 	if err != nil {
-		panic(err)
+		return string(output), err
 	}
-	return string(output)
+	return string(output), nil
 }
 
 // rsa加密
-func (u *User) rsaEncrypt(input string) []byte {
+func (u *User) rsaEncrypt(input string) ([]byte, error) {
 	output, err := rsa.EncryptPKCS1v15(rand.Reader, &u.PrivateKey.PublicKey, []byte(input))
 	if err != nil {
-		panic(err)
+		return output, err
 	}
-	return output
+	return output, nil
 }
 
 // PKCS5Padding 填充
@@ -148,45 +147,50 @@ func PKCS5UnPadding(origData []byte) []byte {
 }
 
 // des3编码
-func (u *User) des3Encrypt(input []byte) []byte {
+func (u *User) des3Encrypt(input []byte) ([]byte, error) {
 	cipherBlk, err := des.NewTripleDESCipher([]byte(u.Key))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	input = PKCS5Padding(input, cipherBlk.BlockSize())
 	blockMode := cipher.NewCBCEncrypter(cipherBlk, []byte("66666666"))
 	output := make([]byte, len(input))
 	blockMode.CryptBlocks(output, input)
-	return output
+	return output, nil
 }
 
 // des3解码
-func (u *User) des3Decrypt(input []byte) []byte {
+func (u *User) des3Decrypt(input []byte) ([]byte, error) {
 	cipherBlk, err := des.NewTripleDESCipher([]byte(u.Key))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	blockMode := cipher.NewCBCDecrypter(cipherBlk, []byte("66666666"))
 	output := make([]byte, len(input))
 	blockMode.CryptBlocks(output, input)
 	output = PKCS5UnPadding(output)
-	return output
+	return output, nil
 }
 
 // 计算sha256
-func getSha256(input []byte) string {
+func getSha256(input []byte) (string, error) {
 	h := sha256.New()
 	_, err := h.Write(input)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return hex.EncodeToString(h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil)), err
 }
 
 // 模拟登录
-func (u *User) login() (OK bool, msg string) {
+func (u *User) login() error {
 	// 对密码进行des3加密
-	password := base64.StdEncoding.EncodeToString(u.des3Encrypt([]byte(u.Password)))
+	passwordDES3, err := u.des3Encrypt([]byte(u.Password))
+	if err != nil {
+		return err
+	}
+	// 对密文进行 base64 编码
+	password := base64.StdEncoding.EncodeToString(passwordDES3)
 	// 准备要上传的数据
 	loginArgsMap := make(map[string]interface{})
 	loginArgsMap["appCode"] = "M002"
@@ -207,11 +211,13 @@ func (u *User) login() (OK bool, msg string) {
 	// 将mapjson序列化
 	loginArgsJSON, err := json.Marshal(loginArgsMap)
 	if err != nil {
-		panic("func login(): " + err.Error())
+		return err
 	}
-	// fmt.Println("\ndata字段加密前的数据", string(loginArgsJSON))
 	// 对loginArgsJSON进行des3加密
-	loginArgsJSON = u.des3Encrypt(loginArgsJSON)
+	loginArgsJSON, err = u.des3Encrypt(loginArgsJSON)
+	if err != nil {
+		return err
+	}
 	// 对loginArgsJSON进行base64编码
 	loginArgsJSONStr := base64.StdEncoding.EncodeToString(loginArgsJSON)
 	// 准备直接上传的结构体
@@ -222,50 +228,52 @@ func (u *User) login() (OK bool, msg string) {
 	// jsonByte 要直接上传的json数据
 	jsonByte, err := json.Marshal(jsonMap)
 	if err != nil {
-		panic("func login(): " + err.Error())
+		return err
 	}
-	// fmt.Println("\n登录POST的数据：", string(jsonByte))
 	req, err := http.NewRequest("POST", "https://server.17wanxiao.com/campus/cam_iface46/loginnew.action", bytes.NewBuffer(jsonByte))
 	if err != nil {
-		panic("func login(): " + err.Error())
+		return err
 	}
 	// 计算sha256
-	jsonByte256 := getSha256(jsonByte)
+	jsonByte256, err := getSha256(jsonByte)
+	if err != nil {
+		return err
+	}
 
 	req.Header.Set("campusSign", jsonByte256)
-	// req.Header.Set("Content-Type", "application/json")
-	// fmt.Println("\n登录POST的数据的sha256：", jsonByte256)
+
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		panic("func login(): " + err.Error())
+		return err
 	}
 	defer res.Body.Close()
 	resbody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		panic("func login(): " + err.Error())
+		return err
 	}
-	// fmt.Printf("\n服务器对登录请求的回复：%#v\n", string(resbody))
 
 	resMap := make(map[string]interface{})
 	err = json.Unmarshal(resbody, &resMap)
 	if err != nil {
-		panic("func login(): " + err.Error())
+		return err
 	}
-	OK, ok := resMap["result_"].(bool)
+	resul, ok := resMap["result_"].(bool)
 	if !ok {
-		panic("func login(): OK 类型断言失败")
+		return fmt.Errorf("服务器返回数据异常")
 	}
-	msg, ok = resMap["message_"].(string)
-	if !ok {
-		panic(ok)
+	if !resul {
+		msg, ok := resMap["message_"].(string)
+		if !ok {
+			return fmt.Errorf("登录失败,服务器返回数据异常")
+		}
+		return fmt.Errorf("登录失败%v", msg)
 	}
-
-	return OK, msg
+	return nil
 }
 
 // 获取上一次的打卡信息
-func (u *User) getLastCheckInData() {
+func (u *User) getLastCheckInData() error {
 	// 准备上传的数据
 	jsonDataOfUploadJSONMap := make(map[string]string)
 	jsonDataOfUploadJSONMap["templateid"] = "pneumonia"
@@ -281,7 +289,7 @@ func (u *User) getLastCheckInData() {
 	// 初始化一个请求对象
 	req, err := http.NewRequest("POST", "https://reportedh5.17wanxiao.com/sass/api/epmpics", bytes.NewBuffer(uploadJSONByte))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// 设置请求头
@@ -293,18 +301,18 @@ func (u *User) getLastCheckInData() {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// 获取服务器返回的数据
 	resBodyByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	resBodyMap := make(map[string]string)
 	err = json.Unmarshal(resBodyByte, &resBodyMap)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	data := resBodyMap["data"]
 
@@ -425,50 +433,56 @@ func (u *User) getLastCheckInData() {
 		u.Session,
 	)
 
+	return nil
 }
 
-func (u *User) activateSession() (bool, string) {
+// 激活Session
+func (u *User) activateSession() error {
 	postStr := "appClassify=DK&token=" + u.Session
 	req, err := http.NewRequest("POST", "https://reportedh5.17wanxiao.com/api/clock/school/getUserInfo", bytes.NewBuffer([]byte(postStr)))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	// 读取数据
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 	// 解析数据
 	bodyMap := make(map[string]interface{})
 	err = json.Unmarshal(body, &bodyMap)
 	if err != nil {
-		panic("func activateSession() " + err.Error())
+		return err
 	}
 	result, ok := bodyMap["result"].(bool)
 	if !ok {
-		panic("func activateSession(): result类型断言失败")
+		return fmt.Errorf("服务器返回数据异常, result类型断言失败")
 	}
-	msg, ok := bodyMap["msg"].(string)
-	if !ok {
-		panic("func activateSession(): msg类型断言失败")
+	if !result {
+		msg, ok := bodyMap["msg"].(string)
+		if !ok {
+			return fmt.Errorf("服务器返回数据异常, result类型断言失败")
+		}
+		return fmt.Errorf("Session激活失败, %v", msg)
 	}
-	return result, msg
+
+	return nil
 }
 
 // 打卡
-func (u *User) checkIn() (bool, string) {
+func (u *User) checkIn() error {
 	// checkData := strings.ReplaceAll(u.CheckData, "\n", "")
 	checkData := strings.ReplaceAll(strings.ReplaceAll(u.CheckData, "\n", ""), "\t", "")
 	// 初始化一个请求对象
 	req, err := http.NewRequest("POST", "https://reportedh5.17wanxiao.com/sass/api/epmpics", bytes.NewBuffer([]byte(checkData)))
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	// 设置请求头
 	req.Header.Set("Origin", "https://reportedh5.17wanxiao.com")
@@ -483,23 +497,26 @@ func (u *User) checkIn() (bool, string) {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	resBodyByte, err := ioutil.ReadAll(res.Body)
-	fmt.Println(string(resBodyByte))
 	resBodyMap := make(map[string]interface{})
 	err = json.Unmarshal(resBodyByte, &resBodyMap)
 	if err != nil {
-		panic("func checkIn():" + err.Error())
+		return nil
 	}
 	msg, ok := resBodyMap["msg"].(string)
 	if !ok {
-		panic("func checkIn(): msg类型断言失败")
+		return fmt.Errorf("服务器返回数据异常")
 	}
 	if msg != "成功" {
-		return false, msg
+		data, ok := resBodyMap["data"].(string)
+		if !ok {
+			data = "服务器返回数据异常"
+		}
+		return fmt.Errorf("登录失败, %v", data)
 	}
-	return true, ""
+	return nil
 }
 
 func dial(addr string) (*smtp.Client, error) {
@@ -580,38 +597,58 @@ func (u *User) sendEmail(to, password, title, body string) error {
 }
 
 func wanxiaoHealthyCheck() {
-	setting := loadSetting()
-	for _, user := range setting.Users {
-		user.createRSAKey()
-		user.exchangeKey()
-		fmt.Printf("1. 与服务器交换得到的密钥key: %v和session:%v\n", user.Key, user.Session)
-		ok, msg := user.login()
-		if !ok {
-			panic("登录失败,msg:" + msg)
+	logger := logor.NewConsoleLogger("debug")
+	config, err := loadConfig()
+	if err != nil {
+		logger.Error("读取配置文件失败：%v", err)
+		return
+	}
+	for _, user := range config.Users {
+		err = user.createRSAKey()
+		if err != nil {
+			logger.Error("用户%v生成密钥失败：%v", user.Username, err)
+			return
 		}
-		fmt.Println("2. 登录成功！")
-		result, msg := user.activateSession()
-		if !result {
-			panic("Session激活失败,msg:" + msg)
+		err = user.exchangeKey()
+		if err != nil {
+			logger.Error("与服务器交换得到的密钥失败, %v", err)
+			return
 		}
-		fmt.Println("3. Session激活为Token成功！")
+		logger.Info("1. 与服务器交换得到的密钥key: %v和session:%v", user.Key, user.Session)
+		err := user.login()
+		if err != nil {
+			logger.Error("登录失败: %v", err)
+			return
+		}
+		logger.Info("2. 登录成功！")
+		err = user.activateSession()
+		if err != nil {
+			logger.Error("Session激活失败, %v", err)
+			return
+		}
+		logger.Info("3. Session激活为Token成功！")
 		// 获取上一次的打卡信息
-		user.getLastCheckInData()
+		err = user.getLastCheckInData()
+		if err != nil {
+			logger.Error("获取上次打卡信息失败, %v", err)
+			return
+		}
 		// 打卡
-		if ok, msg := user.checkIn(); !ok {
-			fmt.Printf("用户%v打卡失败, msg:%v", user.Username, msg)
+		err = user.checkIn()
+		if err != nil {
+			logger.Error("用户%v打卡失败, err:%v", user.Username, err)
 			err := user.sendEmail(user.Email, user.EmailPassword, "完美校园打卡通知", "用户"+user.Username+"今日打卡失败")
 			if err != nil {
-				panic(err)
+				logger.Error("用户%v邮件发送失败, err:%v", user.Username, err)
 			}
-			panic(fmt.Errorf("用户%v打卡失败, msg:%v", user.Username, msg))
+			return
 		}
-		fmt.Printf("4. 用户%v打卡成功\n", user.Username)
-		err := user.sendEmail(user.Email, user.EmailPassword, "完美校园打卡通知", "用户"+user.Username+"今日打卡成功")
+		logger.Info("4. 用户%v打卡成功", user.Username)
+		err = user.sendEmail(user.Email, user.EmailPassword, "完美校园打卡通知", "用户"+user.Username+"今日打卡成功")
 		if err != nil {
-			panic(err)
+			logger.Error("用户%v邮件发送失败, err:%v", user.Username, err)
 		}
-		fmt.Printf("5. 用户%v邮件发送成功\n", user.Username)
+		logger.Info("5. 用户%v邮件发送成功\n", user.Username)
 	}
 }
 
