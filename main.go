@@ -17,7 +17,6 @@ import (
 	"net"
 	"net/http"
 	"net/smtp"
-	"strings"
 	"time"
 
 	"github.com/FNDHSTD/logor"
@@ -27,6 +26,67 @@ import (
 // Config 配置文件
 type Config struct {
 	Users []User `json:"users"`
+}
+
+// User 用户结构体，存储所有的初始信息
+type User struct {
+	// Session 就是打卡要用的 token,但是需要激活才行
+	Session       string
+	Username      string `json:"username"`
+	Password      string `json:"passworld"`
+	Email         string `json:"email"`
+	EmailPassword string `json:"emailPassword"`
+	PrivateKey    *rsa.PrivateKey
+	Key           string
+	DeviceID      string `json:"deviceId"`
+	CheckData     CheckDataTmp
+}
+
+// LastCheck 上一次的打卡数据
+type LastCheck struct {
+	AreaStr              string `json:"areaStr"`
+	CusTemplateRelations []struct {
+		Propertyname string `json:"propertyname"`
+		Value        string `json:"value"`
+	} `json:"cusTemplateRelations"`
+	Customerid string `json:"customerid"`
+	DeptStr    struct {
+		Deptid int    `json:"deptid"`
+		Text   string `json:"text"`
+	} `json:"deptStr"`
+	Phonenum   string `json:"phonenum"`
+	StuNo      string `json:"stuNo"`
+	Templateid string `json:"templateid"`
+	Userid     string `json:"userid"`
+	Username   string `json:"username"`
+}
+
+// CheckDataTmp 本次打卡模板
+type CheckDataTmp struct {
+	BusinessType string `json:"businessType"`
+	JSONData     struct {
+		AreaStr    string `json:"areaStr"`
+		Customerid string `json:"customerid"`
+		DeptStr    struct {
+			Deptid int    `json:"deptid"`
+			Text   string `json:"text"`
+		} `json:"deptStr"`
+		Deptid     int    `json:"deptid"`
+		GpsType    int    `json:"gpsType"`
+		Phonenum   string `json:"phonenum"`
+		Reportdate int64  `json:"reportdate"`
+		Source     string `json:"source"`
+		StuNo      string `json:"stuNo"`
+		Templateid string `json:"templateid"`
+		Token      string `json:"token"`
+		Updatainfo []struct {
+			Propertyname string `json:"propertyname"`
+			Value        string `json:"value"`
+		} `json:"updatainfo"`
+		Userid   string `json:"userid"`
+		Username string `json:"username"`
+	} `json:"jsonData"`
+	Method string `json:"method"`
 }
 
 // 加载配置文件
@@ -41,20 +101,6 @@ func loadConfig() (Config, error) {
 		return config, fmt.Errorf("配置文件解析失败, %v", err)
 	}
 	return config, nil
-}
-
-// User 用户结构体，存储所有的初始信息
-type User struct {
-	// Session 就是打卡要用的 token,但是需要激活才行
-	Session       string
-	Username      string `json:"username"`
-	Password      string `json:"passworld"`
-	Email         string `json:"email"`
-	EmailPassword string `json:"emailPassword"`
-	PrivateKey    *rsa.PrivateKey
-	Key           string
-	DeviceID      string `json:"deviceId"`
-	CheckData     string
 }
 
 // 生成 RSA 密钥
@@ -316,122 +362,37 @@ func (u *User) getLastCheckInData() error {
 	}
 	data := resBodyMap["data"]
 
-	dataMap := make(map[string]interface{})
-	json.Unmarshal([]byte(data), &dataMap)
+	// 解析上一次的打卡信息
+	var lastData LastCheck
+	err = json.Unmarshal([]byte(data), &lastData)
+	if err != nil {
+		return err
+	}
 
-	u.CheckData = fmt.Sprintf(
-		`{
-			"businessType": "epmpics",
-			"method": "submitUpInfo",
-			"jsonData": {
-				"deptStr": {
-					"deptid": %v,
-					"text": "%v"
-				},
-				"areaStr": "%v",
-				"reportdate": %v,
-				"customerid": "%v",
-				"deptid": %v,
-				"source": "app",
-				"templateid": "%v",
-				"stuNo": "%v",
-				"username": "%v",
-				"phonenum": "",
-				"userid": "%v",
-				"updatainfo": [
-					{
-						"propertyname": "temperature",
-						"value": "36.4"
-					},
-					{
-						"propertyname": "symptom",
-						"value": "无症状"
-					},
-					{
-						"propertyname": "isConfirmed",
-						"value": "否"
-					},
-					{
-						"propertyname": "isdefinde",
-						"value": "否.未隔离"
-					},
-					{
-						"propertyname": "isTouch",
-						"value": "否"
-					},
-					{
-						"propertyname": "isTransitArea",
-						"value": "否"
-					},
-					{
-						"propertyname": "是否途径或逗留过疫情中，高风险地区？",
-						"value": ""
-					},
-					{
-						"propertyname": "isFFHasSymptom",
-						"value": "没有"
-					},
-					{
-						"propertyname": "isContactFriendIn14",
-						"value": "没有"
-					},
-					{
-						"propertyname": "xinqing",
-						"value": "健康"
-					},
-					{
-						"propertyname": "bodyzk",
-						"value": "是"
-					},
-					{
-						"propertyname": "cxjh",
-						"value": "否"
-					},
-					{
-						"propertyname": "isleaveaddress",
-						"value": "否"
-					},
-					{
-						"propertyname": "isAlreadyInSchool",
-						"value": "没有"
-					},
-					{
-						"propertyname": "ownPhone",
-						"value": "%v"
-					},
-					{
-						"propertyname": "emergencyContact",
-						"value": "%v"
-					},
-					{
-						"propertyname": "mergencyPeoplePhone",
-						"value": "%v"
-					},
-					{
-						"propertyname": "assistRemark",
-						"value": ""
-					}
-				],
-				"gpsType": 1,
-				"token": "%v"
-			}
-		}`,
-		dataMap["deptStr"].(map[string]interface{})["deptid"].(float64),
-		dataMap["deptStr"].(map[string]interface{})["text"].(string),
-		// dataMap["areaStr"].(string),
-		strings.ReplaceAll(dataMap["areaStr"].(string), `"`, `\"`),
-		time.Now().UnixNano()/1e6,
-		dataMap["customerid"],
-		dataMap["deptStr"].(map[string]interface{})["deptid"].(float64),
-		dataMap["templateid"],
-		dataMap["stuNo"],
-		dataMap["username"],
-		dataMap["userid"],
-		dataMap["cusTemplateRelations"].([]interface{})[14].(map[string]interface{})["value"].(string),
-		dataMap["cusTemplateRelations"].([]interface{})[15].(map[string]interface{})["value"].(string),
-		dataMap["cusTemplateRelations"].([]interface{})[16].(map[string]interface{})["value"].(string),
-		u.Session,
-	)
+	// 填入打卡信息
+	u.CheckData.BusinessType = "epmpics"
+	u.CheckData.Method = "submitUpInfo"
+	u.CheckData.JSONData.AreaStr = lastData.AreaStr
+	u.CheckData.JSONData.Customerid = lastData.Customerid
+	u.CheckData.JSONData.DeptStr = lastData.DeptStr
+	u.CheckData.JSONData.Deptid = lastData.DeptStr.Deptid
+	u.CheckData.JSONData.GpsType = 1
+	u.CheckData.JSONData.Phonenum = ""
+	u.CheckData.JSONData.Reportdate = time.Now().UnixNano() / 1e6
+	u.CheckData.JSONData.Source = "app"
+	u.CheckData.JSONData.StuNo = lastData.StuNo
+	u.CheckData.JSONData.Templateid = lastData.Templateid
+	u.CheckData.JSONData.Token = u.Session
+	u.CheckData.JSONData.Userid = lastData.Userid
+	u.CheckData.JSONData.Username = lastData.Username
+	for i := 0; i < len(lastData.CusTemplateRelations); i++ {
+		u.CheckData.JSONData.Updatainfo = append(u.CheckData.JSONData.Updatainfo, struct {
+			Propertyname string "json:\"propertyname\""
+			Value        string "json:\"value\""
+		}{})
+		u.CheckData.JSONData.Updatainfo[i].Propertyname = lastData.CusTemplateRelations[i].Propertyname
+		u.CheckData.JSONData.Updatainfo[i].Value = lastData.CusTemplateRelations[i].Value
+	}
 
 	return nil
 }
@@ -477,10 +438,13 @@ func (u *User) activateSession() error {
 
 // 打卡
 func (u *User) checkIn() error {
-	// checkData := strings.ReplaceAll(u.CheckData, "\n", "")
-	checkData := strings.ReplaceAll(strings.ReplaceAll(u.CheckData, "\n", ""), "\t", "")
+
+	checkData, err := json.Marshal(u.CheckData)
+	if err != nil {
+		return err
+	}
 	// 初始化一个请求对象
-	req, err := http.NewRequest("POST", "https://reportedh5.17wanxiao.com/sass/api/epmpics", bytes.NewBuffer([]byte(checkData)))
+	req, err := http.NewRequest("POST", "https://reportedh5.17wanxiao.com/sass/api/epmpics", bytes.NewBuffer(checkData))
 	if err != nil {
 		return nil
 	}
@@ -519,6 +483,7 @@ func (u *User) checkIn() error {
 	return nil
 }
 
+// 发起TLS
 func dial(addr string) (*smtp.Client, error) {
 	connect, err := tls.Dial("tcp", addr, &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
@@ -533,6 +498,7 @@ func dial(addr string) (*smtp.Client, error) {
 	return smtp.NewClient(connect, host)
 }
 
+// 发送邮件
 func (u *User) sendEmail(to, password, title, body string) error {
 	// 设置邮件内容头部信息
 	header := make(map[string]string)
