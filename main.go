@@ -7,17 +7,16 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
-	"net/smtp"
 	"time"
+
+	"report"
 
 	"github.com/FNDHSTD/logor"
 	"github.com/tencentyun/scf-go-lib/cloudfunction"
@@ -36,6 +35,8 @@ type User struct {
 	Password      string `json:"passworld"`
 	Email         string `json:"email"`
 	EmailPassword string `json:"emailPassword"`
+	ServerJ       string `json:"serverJ"`
+	Pushplus      string `json:"pushPlus"`
 	PrivateKey    *rsa.PrivateKey
 	Key           string
 	DeviceID      string `json:"deviceId"`
@@ -483,83 +484,26 @@ func (u *User) checkIn() error {
 	return nil
 }
 
-// 发起TLS
-func dial(addr string) (*smtp.Client, error) {
-	connect, err := tls.Dial("tcp", addr, &tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		fmt.Println("Dial:", err)
-		return nil, err
-	}
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	return smtp.NewClient(connect, host)
-}
-
-// 发送邮件
-func (u *User) sendEmail(to, password, title, body string) error {
-	// 设置邮件内容头部信息
-	header := make(map[string]string)
-	header["From"] = "WanxiaoHealthyCheck"
-	header["TO"] = to
-	header["Subject"] = title
-	header["Content-Type"] = "text/html;chartset=UTF-8"
-
-	// 将头部信息拼接
-	var smtpMsg string
-	for k, v := range header {
-		smtpMsg += k + ":" + v + "\r\n"
+// 发送提醒
+func (u *User) report(text string) (err error) {
+	if u.Email != "" && u.EmailPassword != "" {
+		errTmp := report.SendEmail(u.Email, u.EmailPassword, "完美校园打卡通知", text)
+		if errTmp != nil {
+			err = fmt.Errorf("邮件提醒失败" + errTmp.Error())
+		}
+	} else if u.Pushplus != "" {
+		errTmp := report.Pushpluse(u.Pushplus, "完美校园打卡通知", text)
+		if err != nil {
+			err = fmt.Errorf("pushplus提醒失败" + errTmp.Error())
+		}
+	} else if u.ServerJ != "" {
+		errTmp := report.ServerJ(u.ServerJ, "完美校园打卡通知", text)
+		if errTmp != nil {
+			err = fmt.Errorf("Server酱提醒失败: " + errTmp.Error())
+		}
 	}
 
-	// 将正文拼接
-	smtpMsg += "\r\n" + body
-
-	// 初始化一个作者变量
-	// auth := smtp.PlainAuth("", "1713252605@qq.com", "yfktavpmfbxvbfjc", "smtp.qq.com")
-	auth := smtp.PlainAuth("", to, password, "smtp.qq.com")
-
-	recipients := to
-
-	c, err := dial("smtp.qq.com:465")
-	if err != nil {
-		return err
-	}
-	defer c.Close()
-
-	err = c.Auth(auth)
-	if err != nil {
-		return err
-	}
-
-	err = c.Mail(to)
-	if err != nil {
-		return err
-	}
-
-	err = c.Rcpt(recipients)
-	if err != nil {
-		return err
-	}
-
-	writer, err := c.Data()
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write([]byte(smtpMsg))
-	if err != nil {
-		return err
-	}
-	err = writer.Close()
-	if err != nil {
-		return err
-	}
-	err = c.Quit()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func wanxiaoHealthyCheck() {
@@ -603,18 +547,14 @@ func wanxiaoHealthyCheck() {
 		err = user.checkIn()
 		if err != nil {
 			logger.Error("用户%v打卡失败, err:%v", user.Username, err)
-			err := user.sendEmail(user.Email, user.EmailPassword, "完美校园打卡通知", "用户"+user.Username+"今日打卡失败")
-			if err != nil {
-				logger.Error("用户%v邮件发送失败, err:%v", user.Username, err)
-			}
-			return
 		}
 		logger.Info("4. 用户%v打卡成功", user.Username)
-		err = user.sendEmail(user.Email, user.EmailPassword, "完美校园打卡通知", "用户"+user.Username+"今日打卡成功")
+		// 开始发通知
+		err = user.report("用户" + user.Username + "今日打卡成功")
 		if err != nil {
-			logger.Error("用户%v邮件发送失败, err:%v", user.Username, err)
+			logger.Error("用户%v提醒失败：%v", user.Username, err.Error())
 		}
-		logger.Info("5. 用户%v邮件发送成功\n", user.Username)
+		logger.Info("5. 用户%v提醒完成", user.Username)
 	}
 }
 

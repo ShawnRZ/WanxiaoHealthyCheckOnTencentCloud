@@ -1,11 +1,13 @@
 {
     "users": [
         {
-            "username": "登录完美校园APP的账号",
-            "passworld": "登录完美校园APP的密码",
+            "username": "完美校园登录用户名",
+            "passworld": "完美校园登录密码",
             "deviceId": "IMEI",
-            "email": "你的qq邮箱，用于邮件提醒",
-            "emailPassword": "qq邮箱授权码"
+            "email": "QQ邮箱",
+            "emailPassword": "qq邮箱授权码",
+            "serverJ": "server酱推送的sckey",
+            "pushPlus": "pushplus推送的token"
         }
     ]
 }

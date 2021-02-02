@@ -6,6 +6,22 @@
 
 ------
 
+## 功能
+
+- 完美校园每日定时自动打卡
+
+- pushplus推送，[官网][11]
+
+- 邮箱推送
+
+- server酱推送（有问题），[官网][10]
+
+> 三种推送方式请任选其一（直接把对应的key填入配置文件即可），推荐使用邮箱或者pushplus，若填写了多种推送方式则按照优先级选择最大的，其优先级为：邮箱>pushplus>server酱
+
+## 寻人启事
+
+急需熟悉Android开发或者逆向的童鞋协助开发，QQ：1713252605
+
 ## 实现原理
 
 - 模拟手机app登录，获取打卡所需的token
@@ -86,3 +102,5 @@
 [7]:https://github.com/FNDHSTD/WanxiaoHealthyCheckOnTencentCloud/archive/master.zip
 [8]:https://cloud.tencent.com/
 [9]:https://cloud.tencent.com/document/product/583/9708
+[10]:http://sc.ftqq.com/
+[11]:https://pushplus.hxtrip.com/
