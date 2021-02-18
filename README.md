@@ -22,7 +22,7 @@
 
 ## 寻人启事
 
-寻找一位熟悉Android开发或者逆向的童鞋完善此项目，QQ：1713252605
+寻找一位熟悉Android开发或者逆向的童鞋完善此项目, https://t.me/joinchat/U1CYMWvgXjXTE9lx
 
 ## 实现原理
 
