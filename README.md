@@ -89,7 +89,7 @@
 
 9. 最后点击完成，部署成功！
 
-## 个人博客地址：[RZX's blog][1]
+## 个人博客地址(暂时无法访问)：[RZX's blog][1]
 
 [1]:http://blog.rzx.ink
 [2]:https://github.com/FNDHSTD/WanxiaoHealthyCheckOnTencentCloud/issues
