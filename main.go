@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/tencentyun/scf-go-lib/cloudfunction"
 )
 
 // 开始打卡
@@ -588,7 +590,7 @@ func (u *User) healthyCheck() error {
 	}
 }
 
-func main() {
+func wanxiaoHealthyCheck() {
 	for _, user := range settings.Users {
 		// 交换密钥
 		err := user.createRSAKey()
@@ -631,4 +633,8 @@ func main() {
 		// 发送通知
 		user.report("用户" + user.PhoneNumber + "打卡成功!")
 	}
+}
+
+func main() {
+	cloudfunction.Start(wanxiaoHealthyCheck)
 }
