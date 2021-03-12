@@ -168,18 +168,17 @@ func SendEmail(to, password, title, body string) {
 func (u *User) report(text string) {
 	if u.ServerJ != "" {
 		w.Add(1)
-		ServerJ(u.ServerJ, "完美校园打卡通知", text)
-
+		go ServerJ(u.ServerJ, "完美校园打卡通知", text)
 	}
 
 	if u.Email != "" && u.EmailPassword != "" {
 		w.Add(1)
-		SendEmail(u.Email, u.EmailPassword, "完美校园打卡通知", text)
+		go SendEmail(u.Email, u.EmailPassword, "完美校园打卡通知", text)
 	}
 
 	if u.PushPlus != "" {
 		w.Add(1)
-		Pushpluse(u.PushPlus, "完美校园打卡通知", text)
+		go Pushpluse(u.PushPlus, "完美校园打卡通知", text)
 	}
 	w.Wait()
 }
