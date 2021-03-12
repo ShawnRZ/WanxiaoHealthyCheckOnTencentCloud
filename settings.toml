@@ -1,10 +1,32 @@
 [[users]]
-phoneNumber = "15836156175"
-password = "Renzexuan"
-deviceID = "143159927786774"
-email = "1713252605@qq.com"
-emailPassword = "yfktavpmfbxvbfjc"
-# serverJ = "SCU68326T952ffe69c8d5eb80fa7186d56ce2c7ea5dee46d6c9eb1"
-pushPlus = "58fdac6ea92f4b2fb00cffed914386c3"
+# 在下方双引号中填入登录的手机号
+phoneNumber = ""
+# 在下方双引号中填入登陆密码
+password = ""
+# 在下方双引号中填入从VMOS获取的IMEI
+deviceID = ""
+# 在下方双引号中填入用于通知的邮箱
+email = ""
+# 在下方双引号中填入邮箱授权码
+emailPassword = ""
+# 在下方双引号中填入server酱token
+serverJ = ""
+# 在下方双引号中填入push+ token
+pushPlus = ""
+# 是否进行健康打卡? 是: true, 否:false
 healthyCheck = true
+# 是否进行校内打卡? 是: true, 否:false
 inSchoolCheck = true
+
+#如果需要进行多人打卡按照如下格式即可
+
+# [[users]]
+# phoneNumber = ""
+# password = ""
+# deviceID = ""
+# email = ""
+# emailPassword = ""
+# serverJ = ""
+# pushPlus = ""
+# healthyCheck = true
+# inSchoolCheck = true
