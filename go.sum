@@ -1,4 +1,4 @@
+github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
+github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/FNDHSTD/logor v0.0.0-20210128050834-84504dfb2410 h1:2S59Dpzg5RtV55uXEit8MDYyT3cJ8Bzf6Yg8uebX4B4=
 github.com/FNDHSTD/logor v0.0.0-20210128050834-84504dfb2410/go.mod h1:O4P3QaqwcSz52J52ngyeFvBRd2nNvvVurRX88KXumlA=
-github.com/tencentyun/scf-go-lib v0.0.0-20200624065115-ba679e2ec9c9 h1:JdeXp/XPi7lBmpQNSUxElMAvwppMlFSiamTtXYRFuUc=
-github.com/tencentyun/scf-go-lib v0.0.0-20200624065115-ba679e2ec9c9/go.mod h1:K3DbqPpP2WE/9MWokWWzgFZcbgtMb9Wd5CYk9AAbEN8=
