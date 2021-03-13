@@ -402,18 +402,13 @@ func (u *User) inSchoolCheck(id int, ruleID int) error {
 	if err != nil {
 		return err
 	}
-	// fmt.Println(string(resBodyByte))
-	resBlock := struct {
-		Code string `json:"code"`
-		Data string `json:"data"`
-		Msg  string `json:"msg"`
-	}{}
+	resBlock := make(map[string]interface{})
 	err = json.Unmarshal(resBodyByte, &resBlock)
 	if err != nil {
 		return err
 	}
-	if resBlock.Msg != "成功" {
-		return fmt.Errorf("校内打卡失败," + resBlock.Data)
+	if resBlock["msg"].(string) != "成功" {
+		return fmt.Errorf("校内打卡失败," + resBlock["data"].(string))
 	}
 	return nil
 }
