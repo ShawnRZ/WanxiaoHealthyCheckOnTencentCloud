@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/tencentyun/scf-go-lib/cloudfunction"
 )
+
+var w2 sync.WaitGroup
 
 // 开始打卡
 func (u *User) start() (err error) {
@@ -587,47 +590,52 @@ func (u *User) healthyCheck() error {
 
 func wanxiaoHealthyCheck() {
 	for _, user := range settings.Users {
-		// 交换密钥
-		err := user.createRSAKey()
-		if err != nil {
-			logger.Error("创建密钥失败:", err.Error())
-			user.report("用户" + user.PhoneNumber + "打卡失败!")
-			return
-		}
-		err = user.exchangeKey()
-		if err != nil {
-			logger.Error("与服务器交换密钥失败:", err.Error())
-			user.report("用户" + user.PhoneNumber + "打卡失败!")
+		w2.Add(1)
+		go func(user User) {
+			defer w2.Done()
+			// 交换密钥
+			err := user.createRSAKey()
+			if err != nil {
+				logger.Error("创建密钥失败:", err.Error())
+				user.report("用户" + user.PhoneNumber + "打卡失败!")
+				return
+			}
+			err = user.exchangeKey()
+			if err != nil {
+				logger.Error("与服务器交换密钥失败:", err.Error())
+				user.report("用户" + user.PhoneNumber + "打卡失败!")
 
-			return
-		}
-		logger.Info("1. 与服务器交换得到的密钥key: %v和session:%v", user.Key, user.Session)
-		// 登录
-		err = user.login()
-		if err != nil {
-			logger.Error("登陆失败:", err.Error())
-			user.report("用户" + user.PhoneNumber + "打卡失败!")
-			return
-		}
-		logger.Info("2. 登录成功！")
-		// 激活Session
-		err = user.activateSession()
-		if err != nil {
-			logger.Error("Session激活失败, %v", err)
-			user.report("用户" + user.PhoneNumber + "打卡失败!")
-			return
-		}
-		logger.Info("3. Session激活为Token成功！")
-		// 打卡
-		err = user.start()
-		if err != nil {
-			user.report("用户" + user.PhoneNumber + "打卡失败:如果你设置了两种打卡那至少有一种失败了")
-			return
-		}
-		logger.Info("4. 打卡成功！")
-		// 发送通知
-		user.report("用户" + user.PhoneNumber + "打卡成功!")
+				return
+			}
+			logger.Info("1. 与服务器交换得到的密钥key: %v和session:%v", user.Key, user.Session)
+			// 登录
+			err = user.login()
+			if err != nil {
+				logger.Error("登陆失败:", err.Error())
+				user.report("用户" + user.PhoneNumber + "打卡失败!")
+				return
+			}
+			logger.Info("2. 登录成功！")
+			// 激活Session
+			err = user.activateSession()
+			if err != nil {
+				logger.Error("Session激活失败, %v", err)
+				user.report("用户" + user.PhoneNumber + "打卡失败!")
+				return
+			}
+			logger.Info("3. Session激活为Token成功！")
+			// 打卡
+			err = user.start()
+			if err != nil {
+				user.report("用户" + user.PhoneNumber + "打卡失败:如果你设置了两种打卡那至少有一种失败了")
+				return
+			}
+			logger.Info("4. 打卡成功！")
+			// 发送通知
+			user.report("用户" + user.PhoneNumber + "打卡成功!")
+		}(user)
 	}
+	w2.Wait()
 }
 
 func main() {
