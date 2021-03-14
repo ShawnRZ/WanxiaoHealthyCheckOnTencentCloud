@@ -228,16 +228,12 @@ func (u *User) inSchoolCheck(id int, ruleID int) error {
 	if err != nil {
 		return err
 	}
-	resblock := struct {
-		Code string `json:"code"`
-		Data string `json:"data"`
-		Msg  string `json:"msg"`
-	}{}
+	resblock := make(map[string]interface{})
 	err = json.Unmarshal(resBodyByte, &resblock)
 	if err != nil {
 		return err
 	}
-	if resblock.Msg != "成功" {
+	if resblock["msg"].(string) != "成功" {
 		return fmt.Errorf("获取上次打卡信息失败")
 	}
 	lastCheckkData := struct {
@@ -310,7 +306,7 @@ func (u *User) inSchoolCheck(id int, ruleID int) error {
 		Userid              string      `json:"userid"`
 		Username            string      `json:"username"`
 	}{}
-	err = json.Unmarshal([]byte(resblock.Data), &lastCheckkData)
+	err = json.Unmarshal([]byte(resblock["data"].(string)), &lastCheckkData)
 	if err != nil {
 		return err
 	}
