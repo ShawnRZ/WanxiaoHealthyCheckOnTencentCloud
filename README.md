@@ -20,6 +20,7 @@
 
 - server酱推送（有问题），[官网][10]
 
+<!--more-->
 
 ## 寻人启事
 
@@ -43,18 +44,25 @@
 
 2. 打开VMOS，并安装完美校园APP进行打卡
 
-    - 打开VMOS，点击“+”![VMOS打开页面](http://blog.rzx.ink/usr/uploads/2021/03/2089543289.jpg "VMOS打开页面")
+    - 打开VMOS，点击“+”
 
-    - 选择安卓5.1极客版下载并添加![添加虚拟机页面](http://blog.rzx.ink/usr/uploads/2021/03/162672475.jpg "添加虚拟机页面")
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f323038393534333238392e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f323038393534333238392e6a7067" style="zoom:25%;" />
+
+    - 选择安卓5.1极客版下载并添加
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f3136323637323437352e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f3136323637323437352e6a7067" style="zoom: 25%;" />
 
     - 等待一会后，会自动进入虚拟机，点击右侧小圆点
-    ![虚拟机页面](http://blog.rzx.ink/usr/uploads/2021/03/3491046275.jpg "虚拟机页面")
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f333439313034363237352e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f333439313034363237352e6a7067" style="zoom:25%;" />
 
     - 选择文件传输
-    ![悬浮窗](http://blog.rzx.ink/usr/uploads/2021/03/2518043956.jpg "悬浮窗")
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f323531383034333935362e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f323531383034333935362e6a7067" style="zoom:25%;" />
 
     - 选择“我要导入”
-    ![文件导入](http://blog.rzx.ink/usr/uploads/2021/03/171272120.jpg "选择“我要导入”")
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f3137313237323132302e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f3137313237323132302e6a7067" style="zoom:25%;" />
 
     - 导入完美校园安装包
 
@@ -63,16 +71,20 @@
 3. 获取虚拟机IMEI
 
     - 进入设置，注意不要选错了图标
-    ![进入设置](http://blog.rzx.ink/usr/uploads/2021/03/4023518919.jpg "进入设置")
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f343032333531383931392e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f343032333531383931392e6a7067" style="zoom:25%;" />
 
     - 下滑，找到“关于手机”
-    ![](http://blog.rzx.ink/usr/uploads/2021/03/1079664733.jpg)
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f313037393636343733332e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f313037393636343733332e6a7067" style="zoom:25%;" />
 
     - 点击“状态信息”
-    ![](http://blog.rzx.ink/usr/uploads/2021/03/3198369272.jpg)
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f333139383336393237322e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f333139383336393237322e6a7067" style="zoom:25%;" />
 
     - 点击“IMEI信息”
-    ![](http://blog.rzx.ink/usr/uploads/2021/03/476623448.jpg)
+
+      <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f3437363632333434382e6a7067.jpg" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f3437363632333434382e6a7067" style="zoom:25%;" />
 
     - 将IMEI信息记录备用
 
@@ -83,16 +95,18 @@
 6. 打开[腾讯云][8]，在右上角点击登录，登陆后进入控制台，在搜索栏中搜索“云函数”
 
 7. 进入云函数后，选择左侧边栏的函数服务，再点击“新建”，设置如图，点击上传将刚刚下载的文件夹
-![](http://blog.rzx.ink/usr/uploads/2021/03/1386830612.png "云函数设置")
+
+  <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f313338363833303631322e706e67.png" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f313338363833303631322e706e67" style="zoom: 50%;" />
 
 8. 配置触发器，图中设置为每天1点触发，可通过修改Cron表达式更改时间，具体见[文档][9]
-![](http://blog.rzx.ink/usr/uploads/2021/03/2247204310.png)
+
+  <img src="https://rzxpicgo.oss-cn-shenzhen.aliyuncs.com/687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f323234373230343331302e706e67.png" alt="687474703a2f2f626c6f672e727a782e696e6b2f7573722f75706c6f6164732f323032312f30332f323234373230343331302e706e67" style="zoom:150%;" />
 
 9. 最后点击完成，部署成功！
 
 ## 个人博客地址：[RZX's blog][1]
 
-[1]:http://blog.renzexuan.com
+[1]:http://blog.renzexxuan.com
 [2]:https://github.com/FNDHSTD/WanxiaoHealthyCheckOnTencentCloud/issues
 [3]:https://files.vmos.cn/vmospro/version/2021012018500427995_vmoscn.apk
 [4]:http://www.vmos.cn/
