@@ -106,7 +106,7 @@
 
 ## 个人博客地址：[RZX's blog][1]
 
-[1]:http://blog.renzexxuan.com
+[1]:http://blog.renzexuan.com/index.php/archives/3/
 [2]:https://github.com/FNDHSTD/WanxiaoHealthyCheckOnTencentCloud/issues
 [3]:https://files.vmos.cn/vmospro/version/2021012018500427995_vmoscn.apk
 [4]:http://www.vmos.cn/
